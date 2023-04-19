@@ -1,0 +1,68 @@
+from sqlalchemy import create_engine, ForeignKey
+from sqlalchemy.orm import relationship, declarative_base, Session
+from sqlalchemy import Column, Integer, String
+
+
+
+Base = declarative_base()
+
+
+class User(Base):
+    __tablename__ = 'cliente'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    cpf = Column(Integer, nullable=False)
+    address = relationship(
+        'Address', back_populates="user", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f'User(id={self.id}, name={self.name}, ' \
+               f'cpf={self.cpf}'
+
+
+class Address(Base):
+    __tablename__ = "address"
+    id = Column(Integer, primary_key=True)
+    email_address = Column(String(30), nullable=False)
+    user_id = Column(Integer, ForeignKey("cliente.id"), nullable=False)
+
+    user = relationship("User", back_populates="address")
+
+    def __repr__(self):
+        return f'Address(id={self.id}, email_address={self.email_address})'
+
+
+engine = create_engine('sqlite://')
+
+Base.metadata.create_all(engine)
+
+with Session(engine) as session:
+    beatriz = User(
+        name='Beatriz',
+        cpf='37418026888',
+        address=[Address(email_address='beatriz@gmail.com')]
+    )
+
+    caio = User(
+        name='Caio',
+        cpf='45012006861',
+        address=[Address(email_address='caio.76@gmail.com')]
+    )
+
+    session.add_all([beatriz, caio])
+
+    session.commit()
+
+
+users = session.query(User).all()
+
+
+for user in users:
+    print(user.name, user.cpf, user. address)
+
+
+
+
+
+
